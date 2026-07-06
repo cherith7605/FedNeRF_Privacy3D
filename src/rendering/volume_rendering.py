@@ -1,9 +1,8 @@
 """
 volume_rendering.py
 
-Differentiable Volume Rendering used by NeRF.
-
-Author: FedNeRF-Privacy3D
+Stable Differentiable Volume Rendering
+FedNeRF-Privacy3D
 """
 
 import torch
@@ -12,11 +11,12 @@ import torch.nn as nn
 
 class VolumeRenderer(nn.Module):
     """
-    Differentiable volume renderer.
+    Stable NeRF Volume Renderer
     """
 
-    def __init__(self):
+    def __init__(self, eps=1e-10):
         super().__init__()
+        self.eps = eps
 
     def forward(
         self,
@@ -41,46 +41,58 @@ class VolumeRenderer(nn.Module):
 
         delta = depth_values[1:] - depth_values[:-1]
 
+        # Stable final interval
         delta = torch.cat(
             [
                 delta,
-                torch.tensor(
-                    [1e10],
-                    device=depth_values.device,
-                ),
-            ]
+                delta[-1:].clone(),
+            ],
+            dim=0,
         )
 
-        alpha = 1.0 - torch.exp(
-            -sigma * delta
+        delta = delta.unsqueeze(0)
+
+        sigma_delta = sigma * delta
+
+        sigma_delta = torch.clamp(
+            sigma_delta,
+            min=0.0,
+            max=50.0,
         )
+
+        alpha = 1.0 - torch.exp(-sigma_delta)
 
         transmittance = torch.cumprod(
             torch.cat(
                 [
-                    torch.ones_like(alpha[..., :1]),
-                    1.0 - alpha + 1e-10,
+                    torch.ones_like(alpha[:, :1]),
+                    1.0 - alpha + self.eps,
                 ],
-                dim=-1,
+                dim=1,
             ),
-            dim=-1,
-        )[..., :-1]
+            dim=1,
+        )[:, :-1]
 
         weights = alpha * transmittance
 
         rgb_map = torch.sum(
-            weights[..., None] * rgb,
-            dim=-2,
+            weights.unsqueeze(-1) * rgb,
+            dim=1,
         )
 
         depth_map = torch.sum(
-            weights * depth_values,
-            dim=-1,
+            weights * depth_values.unsqueeze(0),
+            dim=1,
         )
 
         acc_map = torch.sum(
             weights,
-            dim=-1,
+            dim=1,
         )
 
-        return rgb_map, depth_map, acc_map, weights
+        return (
+            rgb_map,
+            depth_map,
+            acc_map,
+            weights,
+        )

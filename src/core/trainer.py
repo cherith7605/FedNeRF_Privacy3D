@@ -1,7 +1,7 @@
 """
 trainer.py
 
-Generic NeRF Trainer
+Stable Generic NeRF Trainer
 """
 
 import torch
@@ -52,9 +52,7 @@ class Trainer:
         self.model.train()
 
         ray_origins = ray_origins.to(self.device)
-
         ray_directions = ray_directions.to(self.device)
-
         target_rgb = target_rgb.to(self.device)
 
         points, depth = self.ray_sampler.sample_points(
@@ -63,7 +61,6 @@ class Trainer:
         )
 
         batch_size = points.shape[0]
-
         num_samples = points.shape[1]
 
         encoded = self.encoder(
@@ -90,20 +87,41 @@ class Trainer:
             depth,
         )
 
+        prediction = torch.clamp(
+            prediction,
+            0.0,
+            1.0,
+        )
+
+        if torch.isnan(prediction).any():
+            raise RuntimeError("NaN detected in renderer output.")
+
+        if torch.isinf(prediction).any():
+            raise RuntimeError("Inf detected in renderer output.")
+
         loss = self.loss_fn(
             prediction,
             target_rgb,
         )
 
+        if torch.isnan(loss):
+            raise RuntimeError("Loss became NaN.")
+
+        if torch.isinf(loss):
+            raise RuntimeError("Loss became Inf.")
+
         self.optimizer.zero_grad()
 
         loss.backward()
 
-        self.optimizer.step()
+        torch.nn.utils.clip_grad_norm_(
+            self.model.parameters(),
+            max_norm=1.0,
+        )
 
-        psnr = compute_psnr(loss)
+        self.optimizer.step()
 
         return {
             "loss": loss.item(),
-            "psnr": psnr,
+            "psnr": compute_psnr(loss),
         }
