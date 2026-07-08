@@ -1,16 +1,35 @@
-from pathlib import Path
+"""
+config.py
 
-# ==============================
+Central configuration for FedNeRF-Privacy3D.
+"""
+
+from pathlib import Path
+import torch
+
+# ==========================================================
 # Project Information
-# ==============================
+# ==========================================================
 
 PROJECT_NAME = "FedNeRF-Privacy3D"
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 
-# ==============================
+# ==========================================================
+# Device
+# ==========================================================
+
+DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
+
+# ==========================================================
+# Random Seed
+# ==========================================================
+
+RANDOM_SEED = 42
+
+# ==========================================================
 # Dataset
-# ==============================
+# ==========================================================
 
 DATASET_NAME = "blender"
 
@@ -22,19 +41,85 @@ SCENE_PATH = DATASET_ROOT / DATASET_NAME / SCENE_NAME
 
 TRAIN_FOLDER = SCENE_PATH / "train"
 
-TEST_FOLDER = SCENE_PATH / "test"
-
 VAL_FOLDER = SCENE_PATH / "val"
+
+TEST_FOLDER = SCENE_PATH / "test"
 
 TRAIN_JSON = SCENE_PATH / "transforms_train.json"
 
-TEST_JSON = SCENE_PATH / "transforms_test.json"
-
 VAL_JSON = SCENE_PATH / "transforms_val.json"
 
-# ==============================
+TEST_JSON = SCENE_PATH / "transforms_test.json"
+
+# ==========================================================
+# Training
+# ==========================================================
+
+EPOCHS = 5
+
+BATCH_SIZE = 512
+
+LEARNING_RATE = 5e-4
+
+NUM_WORKERS = 0
+
+# ==========================================================
+# NeRF Model
+# ==========================================================
+
+POSITIONAL_ENCODING_FREQ = 10
+
+INPUT_DIM = 63
+
+HIDDEN_DIM = 256
+
+# ==========================================================
+# Ray Sampling
+# ==========================================================
+
+NEAR = 2.0
+
+FAR = 6.0
+
+NUM_SAMPLES = 64
+
+# ==========================================================
+# Rendering
+# ==========================================================
+
+WHITE_BACKGROUND = False
+
+# ==========================================================
+# Federated Learning
+# ==========================================================
+
+NUM_CLIENTS = 3
+
+LOCAL_EPOCHS = 1
+
+GLOBAL_ROUNDS = 10
+
+FEDERATED_BATCH_SIZE = 512
+
+# ==========================================================
+# Privacy
+# ==========================================================
+
+ENABLE_DIFFERENTIAL_PRIVACY = False
+
+ENABLE_SECURE_AGGREGATION = False
+
+# ==========================================================
+# Logging
+# ==========================================================
+
+RUNS_PATH = PROJECT_ROOT / "runs"
+
+LOG_PATH = PROJECT_ROOT / "logs"
+
+# ==========================================================
 # Outputs
-# ==============================
+# ==========================================================
 
 OUTPUT_PATH = PROJECT_ROOT / "outputs"
 
@@ -44,8 +129,18 @@ GRAPH_PATH = OUTPUT_PATH / "graphs"
 
 RENDER_PATH = OUTPUT_PATH / "renders"
 
-# ==============================
-# Random Seed
-# ==============================
+SAVED_MODEL_PATH = PROJECT_ROOT / "saved_models"
 
-RANDOM_SEED = 42
+RESULTS_PATH = PROJECT_ROOT / "results"
+
+# ==========================================================
+# Checkpoint
+# ==========================================================
+
+CHECKPOINT_NAME = "latest.pth"
+
+# ==========================================================
+# TensorBoard
+# ==========================================================
+
+TENSORBOARD_LOGDIR = RUNS_PATH
