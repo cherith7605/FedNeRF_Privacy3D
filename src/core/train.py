@@ -5,6 +5,7 @@ Main training loop for FedNeRF-Privacy3D.
 """
 
 import random
+import torch
 
 from tqdm import tqdm
 
@@ -28,6 +29,10 @@ def train_model(
     batch_size=1024,
 ):
 
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+
+    print(f"\nUsing Device : {device.upper()}\n")
+
     dataset = BlenderDataset("train")
 
     sampler = RayBatchSampler(dataset)
@@ -36,6 +41,7 @@ def train_model(
         model=TinyNeRF(),
         encoder=PositionalEncoding(),
         renderer=VolumeRenderer(),
+        device=device,
     )
 
     checkpoint = CheckpointManager()
