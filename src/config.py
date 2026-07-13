@@ -101,6 +101,15 @@ GLOBAL_ROUNDS = 10
 
 FEDERATED_BATCH_SIZE = 512
 
+SERVER_ADDRESS = "127.0.0.1:8080"
+
+SIMULATION_BACKEND = "ray"
+
+CLIENT_RESOURCES = {
+    "num_cpus": 1,
+    "num_gpus": 0.0,
+}
+
 # ==========================================================
 # Privacy
 # ==========================================================
