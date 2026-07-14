@@ -45,6 +45,9 @@ class LocalTrainer:
             device=DEVICE,
         )
 
+        self.last_train_loss = 0.0
+        self.last_train_psnr = 0.0
+
     def get_model(self):
         return self.trainer.model
 
@@ -84,6 +87,10 @@ class LocalTrainer:
         Perform local client training.
         """
 
+        total_loss = 0.0
+        total_psnr = 0.0
+        iterations = 0
+
         for _ in range(epochs):
 
             for image_index in range(len(self.dataset)):
@@ -93,11 +100,19 @@ class LocalTrainer:
                     batch_size=batch_size,
                 )
 
-                self.trainer.train_batch(
+                result = self.trainer.train_batch(
                     batch["origin"],
                     batch["direction"],
                     batch["rgb"],
                 )
+
+                total_loss += result["loss"]
+                total_psnr += result["psnr"]
+                iterations += 1
+
+        if iterations > 0:
+            self.last_train_loss = total_loss / iterations
+            self.last_train_psnr = total_psnr / iterations
 
     def evaluate(
         self,
