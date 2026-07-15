@@ -11,7 +11,10 @@ import torch.nn as nn
 
 class VolumeRenderer(nn.Module):
     """
-    Stable NeRF Volume Renderer
+    Stable NeRF Volume Renderer.
+
+    Supports:
+        (..., N_samples, 3)
     """
 
     def __init__(self, eps=1e-10):
@@ -28,20 +31,19 @@ class VolumeRenderer(nn.Module):
         Parameters
         ----------
         rgb
-            (..., N, 3)
+            (..., N_samples, 3)
 
         density
-            (..., N, 1)
+            (..., N_samples, 1)
 
         depth_values
-            (N,)
+            (N_samples,)
         """
 
         sigma = density.squeeze(-1)
 
         delta = depth_values[1:] - depth_values[:-1]
 
-        # Stable final interval
         delta = torch.cat(
             [
                 delta,
@@ -50,7 +52,9 @@ class VolumeRenderer(nn.Module):
             dim=0,
         )
 
-        delta = delta.unsqueeze(0)
+        view_shape = [1] * (sigma.dim() - 1) + [delta.shape[0]]
+
+        delta = delta.view(*view_shape)
 
         sigma_delta = sigma * delta
 
@@ -65,29 +69,29 @@ class VolumeRenderer(nn.Module):
         transmittance = torch.cumprod(
             torch.cat(
                 [
-                    torch.ones_like(alpha[:, :1]),
+                    torch.ones_like(alpha[..., :1]),
                     1.0 - alpha + self.eps,
                 ],
-                dim=1,
+                dim=-1,
             ),
-            dim=1,
-        )[:, :-1]
+            dim=-1,
+        )[..., :-1]
 
         weights = alpha * transmittance
 
         rgb_map = torch.sum(
             weights.unsqueeze(-1) * rgb,
-            dim=1,
+            dim=-2,
         )
 
         depth_map = torch.sum(
-            weights * depth_values.unsqueeze(0),
-            dim=1,
+            weights * depth_values.view(*view_shape),
+            dim=-1,
         )
 
         acc_map = torch.sum(
             weights,
-            dim=1,
+            dim=-1,
         )
 
         return (
