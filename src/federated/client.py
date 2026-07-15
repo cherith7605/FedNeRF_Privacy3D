@@ -65,13 +65,13 @@ class FedNeRFClient(fl.client.NumPyClient):
         )
 
         return (
-        self.get_parameters(config),
-        len(self.local_trainer.dataset),
-        {
-            "loss": self.local_trainer.last_train_loss,
-            "psnr": self.local_trainer.last_train_psnr,
-        },
-    )
+            self.get_parameters(config),
+            len(self.local_trainer.dataset),
+            {
+                "loss": self.local_trainer.last_train_loss,
+                "psnr": self.local_trainer.last_train_psnr,
+            },
+        )
 
     def evaluate(
         self,
@@ -89,15 +89,11 @@ class FedNeRFClient(fl.client.NumPyClient):
             metrics["loss"],
             len(self.local_trainer.dataset),
             {
+                "loss": metrics["loss"],
                 "psnr": metrics["psnr"],
             },
         )
 
 
 def client_fn(context):
-   return FedNeRFClient().to_client()
-from flwr.clientapp import ClientApp
-
-app = ClientApp(
-    client_fn=client_fn,
-)
+    return FedNeRFClient().to_client()
