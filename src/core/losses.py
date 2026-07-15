@@ -5,8 +5,12 @@ Loss functions and evaluation metrics for NeRF.
 """
 
 import math
+
+import numpy as np
 import torch
 import torch.nn as nn
+
+from skimage.metrics import structural_similarity
 
 
 class NeRFLoss(nn.Module):
@@ -16,6 +20,7 @@ class NeRFLoss(nn.Module):
 
     def __init__(self):
         super().__init__()
+
         self.mse = nn.MSELoss()
 
     def forward(
@@ -23,7 +28,10 @@ class NeRFLoss(nn.Module):
         prediction: torch.Tensor,
         target: torch.Tensor,
     ):
-        return self.mse(prediction, target)
+        return self.mse(
+            prediction,
+            target,
+        )
 
 
 def compute_psnr(
@@ -39,3 +47,46 @@ def compute_psnr(
         return 100.0
 
     return -10.0 * math.log10(mse_value)
+
+
+def compute_ssim(
+    prediction: torch.Tensor,
+    target: torch.Tensor,
+):
+    """
+    Compute Structural Similarity Index (SSIM).
+
+    Returns
+    -------
+    float
+    """
+
+    prediction = prediction.detach().cpu().numpy()
+    target = target.detach().cpu().numpy()
+
+    prediction = np.clip(
+        prediction,
+        0.0,
+        1.0,
+    )
+
+    target = np.clip(
+        target,
+        0.0,
+        1.0,
+    )
+
+    if prediction.ndim == 2:
+
+        prediction = prediction[:, None, :]
+
+        target = target[:, None, :]
+
+    value = structural_similarity(
+        prediction,
+        target,
+        channel_axis=-1,
+        data_range=1.0,
+    )
+
+    return float(value)
