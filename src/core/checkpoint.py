@@ -49,6 +49,7 @@ class CheckpointManager:
         checkpoint = torch.load(
             path,
             map_location="cpu",
+            weights_only=True,
         )
 
         model.load_state_dict(
