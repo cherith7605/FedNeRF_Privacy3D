@@ -5,16 +5,27 @@ Image quality evaluation utilities.
 """
 
 import math
+
 import numpy as np
 import torch
 
 from skimage.metrics import structural_similarity
+
+import lpips
+
+
+_lpips_model = lpips.LPIPS(
+    net="alex"
+)
+
+_lpips_model.eval()
 
 
 def compute_psnr(
     prediction,
     target,
 ):
+
     prediction = prediction.detach().cpu()
     target = target.detach().cpu()
 
@@ -32,6 +43,7 @@ def compute_ssim(
     prediction,
     target,
 ):
+
     prediction = (
         prediction.detach()
         .cpu()
@@ -68,13 +80,42 @@ def compute_ssim(
     )
 
 
-def evaluate_images(
+def compute_lpips(
     prediction,
     target,
 ):
     """
-    Compute all image quality metrics.
+    Compute LPIPS perceptual distance.
+
+    Lower is better.
     """
+
+    prediction = (
+        prediction.detach()
+        .cpu()
+        * 2.0
+        - 1.0
+    )
+
+    target = (
+        target.detach()
+        .cpu()
+        * 2.0
+        - 1.0
+    )
+
+    value = _lpips_model(
+        prediction.unsqueeze(0),
+        target.unsqueeze(0),
+    )
+
+    return float(value.item())
+
+
+def evaluate_images(
+    prediction,
+    target,
+):
 
     return {
 
@@ -84,6 +125,11 @@ def evaluate_images(
         ),
 
         "ssim": compute_ssim(
+            prediction,
+            target,
+        ),
+
+        "lpips": compute_lpips(
             prediction,
             target,
         ),

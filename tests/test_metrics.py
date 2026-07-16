@@ -29,11 +29,9 @@ print()
 
 for key, value in metrics.items():
 
-    if isinstance(value, float):
-
-        print(
-            f"{key.upper():<8}: {value:.4f}"
-        )
+    print(
+        f"{key.upper():<8}: {value:.4f}"
+    )
 
 print()
 
