@@ -1,13 +1,11 @@
 """
-evaluate.py
-
-Offline evaluation entry point.
+test_evaluator.py
 """
 
 from src.evaluation.evaluator import Evaluator
 
 print("=" * 60)
-print("FedNeRF Offline Evaluation")
+print("Offline Evaluator Test")
 print("=" * 60)
 
 evaluator = Evaluator()
@@ -20,13 +18,11 @@ print("Checkpoint Loaded")
 
 print(f"Epoch : {checkpoint['epoch']}")
 
-print(f"Loss  : {checkpoint['loss']:.6f}")
+metrics = evaluator.evaluate()
 
 print()
 
-metrics = evaluator.evaluate()
-
-print("Validation")
+print("Evaluation Complete")
 
 print(f"Loss : {metrics['loss']:.6f}")
 
