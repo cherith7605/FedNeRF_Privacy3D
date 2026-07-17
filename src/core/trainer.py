@@ -35,9 +35,17 @@ class Trainer:
 
         self.loss_fn = NeRFLoss()
 
-        self.optimizer = optim.Adam(
+        from src.privacy.dp_optimizer import DPOptimizer
+
+        base_optimizer = optim.Adam(
             self.model.parameters(),
             lr=learning_rate,
+        )
+
+        self.optimizer = DPOptimizer(
+            base_optimizer,
+            max_grad_norm=1.0,
+            noise_multiplier=0.05,
         )
 
         self.ray_sampler = RaySampler()
