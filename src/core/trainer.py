@@ -7,6 +7,10 @@ Stable Generic NeRF Trainer
 import torch
 import torch.optim as optim
 
+from src.config import (
+    MAX_GRAD_NORM,
+    NOISE_MULTIPLIER,
+)
 from src.data.sampler import RaySampler
 from src.core.losses import (
     NeRFLoss,
@@ -44,8 +48,8 @@ class Trainer:
 
         self.optimizer = DPOptimizer(
             base_optimizer,
-            max_grad_norm=1.0,
-            noise_multiplier=0.05,
+            max_grad_norm=MAX_GRAD_NORM,
+            noise_multiplier=NOISE_MULTIPLIER,
         )
 
         self.ray_sampler = RaySampler()
@@ -122,10 +126,6 @@ class Trainer:
 
         loss.backward()
 
-        torch.nn.utils.clip_grad_norm_(
-            self.model.parameters(),
-            max_norm=1.0,
-        )
 
         self.optimizer.step()
 

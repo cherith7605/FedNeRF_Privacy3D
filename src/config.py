@@ -114,9 +114,19 @@ CLIENT_RESOURCES = {
 # Privacy
 # ==========================================================
 
-ENABLE_DIFFERENTIAL_PRIVACY = False
+# ==========================================================
+# Privacy
+# ==========================================================
+
+ENABLE_DIFFERENTIAL_PRIVACY = True
 
 ENABLE_SECURE_AGGREGATION = False
+
+MAX_GRAD_NORM = 1.0
+
+NOISE_MULTIPLIER = 0.05
+
+DELTA = 1e-5
 
 # ==========================================================
 # Logging
