@@ -10,7 +10,10 @@ import torch.optim as optim
 from src.config import (
     MAX_GRAD_NORM,
     NOISE_MULTIPLIER,
+    FEDERATED_ALGORITHM,
+    FEDPROX_MU,
 )
+
 from src.data.sampler import RaySampler
 from src.core.losses import (
     NeRFLoss,
@@ -53,6 +56,41 @@ class Trainer:
         )
 
         self.ray_sampler = RaySampler()
+
+        self.set_global_parameters()
+
+    def set_global_parameters(self):
+        """
+        Store a copy of the global model parameters.
+        Used by FedProx.
+        """
+
+        self.global_parameters = [
+            parameter.detach().clone()
+            for parameter in self.model.parameters()
+        ]
+
+    def fedprox_loss(self):
+        """
+        Compute the FedProx proximal regularization term.
+
+        Returns zero when using FedAvg.
+        """
+
+        if FEDERATED_ALGORITHM.lower() != "fedprox":
+            return 0.0
+
+        proximal_term = 0.0
+
+        for parameter, global_parameter in zip(
+            self.model.parameters(),
+            self.global_parameters,
+        ):
+            proximal_term += (
+                parameter - global_parameter
+            ).pow(2).sum()
+
+        return (FEDPROX_MU / 2.0) * proximal_term
 
     def train_batch(
         self,
@@ -125,7 +163,6 @@ class Trainer:
         self.optimizer.zero_grad()
 
         loss.backward()
-
 
         self.optimizer.step()
 
